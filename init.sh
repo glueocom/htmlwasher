@@ -24,7 +24,7 @@ echo "📁 Creating src/index.ts..."
 mkdir -p src
 cat > src/index.ts << 'EOF'
 export function hello(name: string): string {
-  return `Hello, ${name}!`;
+	return `Hello, ${name}!`;
 }
 EOF
 
@@ -34,9 +34,9 @@ cat > src/index.test.ts << 'EOF'
 import { hello } from "./index";
 
 describe("hello", () => {
-  it("should greet by name", () => {
-    expect(hello("World")).toBe("Hello, World!");
-  });
+	it("should greet by name", () => {
+		expect(hello("World")).toBe("Hello, World!");
+	});
 });
 EOF
 
@@ -44,28 +44,28 @@ EOF
 echo "📝 Creating tsconfig.json..."
 cat > tsconfig.json << 'EOF'
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ESNext"],
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "declarationMap": true,
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "package-out"]
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"lib": ["ESNext"],
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"declaration": true,
+		"declarationMap": true,
+		"noEmit": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["src/*"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist", "package-out"]
 }
 EOF
 
@@ -73,35 +73,35 @@ EOF
 echo "📝 Creating biome.json..."
 cat > biome.json << 'EOF'
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true
-    }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "tab",
-    "lineWidth": 100
-  },
-  "files": {
-    "includes": ["src/**/*.ts"]
-  },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": {
-          "level": "on"
-        }
-      }
-    }
-  }
+	"$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"files": {
+		"includes": ["src/**/*.ts", "*.json", "*.ts"]
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on"
+				}
+			}
+		}
+	}
 }
 EOF
 
@@ -111,32 +111,32 @@ cat > jest.config.ts << 'EOF'
 import type { Config } from "jest";
 
 const config: Config = {
-  testEnvironment: "node",
-  roots: ["<rootDir>/src"],
-  testMatch: ["**/*.test.ts"],
-  transform: {
-    "^.+\\.ts$": ["@swc/jest", {
-      jsc: {
-        parser: {
-          syntax: "typescript",
-        },
-        target: "esnext",
-      },
-    }],
-  },
-  moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/src/$1",
-  },
-  collectCoverageFrom: [
-    "src/**/*.ts",
-    "!src/**/*.test.ts",
-  ],
+	testEnvironment: "node",
+	roots: ["<rootDir>/src"],
+	testMatch: ["**/*.test.ts"],
+	transform: {
+		"^.+\\.ts$": [
+			"@swc/jest",
+			{
+				jsc: {
+					parser: {
+						syntax: "typescript",
+					},
+					target: "esnext",
+				},
+			},
+		],
+	},
+	moduleNameMapper: {
+		"^@/(.*)$": "<rootDir>/src/$1",
+	},
+	collectCoverageFrom: ["src/**/*.ts", "!src/**/*.test.ts"],
 };
 
 export default config;
 EOF
 
-# Create .gitignore (or append if exists)
+# Create .gitignore
 echo "📝 Creating/updating .gitignore..."
 cat > .gitignore << 'EOF'
 # Dependencies
@@ -219,6 +219,10 @@ echo ""
 
 echo "▶ pnpm typecheck"
 pnpm typecheck
+
+echo ""
+echo "▶ pnpm format (auto-fix formatting)"
+pnpm format
 
 echo ""
 echo "▶ pnpm lint"
