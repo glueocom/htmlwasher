@@ -73,14 +73,11 @@ EOF
 echo "📝 Creating biome.json..."
 cat > biome.json << 'EOF'
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
-  },
-  "organizeImports": {
-    "enabled": true
   },
   "linter": {
     "enabled": true,
@@ -94,7 +91,16 @@ cat > biome.json << 'EOF'
     "lineWidth": 100
   },
   "files": {
-    "ignore": ["node_modules", "dist", "package-out"]
+    "includes": ["src/**/*.ts"]
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on"
+        }
+      }
+    }
   }
 }
 EOF
