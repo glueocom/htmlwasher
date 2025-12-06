@@ -191,7 +191,8 @@ pkg.scripts = {
   "lint:fix": "biome check --write .",
   "format": "biome format --write .",
   "pack:folder": "zsh -c 'rm -rf package-out && mkdir -p package-out && pnpm pack --pack-destination package-out && cd package-out && tar -xzf *.tgz --strip-components=1 && rm -f *.tgz'",
-  "typecheck": "tsc --noEmit"
+  "typecheck": "tsc --noEmit",
+  "prepublishOnly": "pnpm typecheck && pnpm test"
 };
 pkg.publishConfig = {
   "access": "public"
@@ -207,7 +208,26 @@ if [ ! -d ".git" ]; then
 fi
 
 echo ""
-echo "✅ Done! Your TypeScript-only package is ready."
+echo "🧪 Running all verification scripts..."
+echo ""
+
+echo "▶ pnpm typecheck"
+pnpm typecheck
+
+echo ""
+echo "▶ pnpm lint"
+pnpm lint
+
+echo ""
+echo "▶ pnpm test"
+pnpm test
+
+echo ""
+echo "▶ pnpm pack:folder"
+pnpm pack:folder
+
+echo ""
+echo "✅ All scripts passed! Your TypeScript-only package is ready."
 echo ""
 echo "Available commands:"
 echo "  pnpm test          - Run tests"
