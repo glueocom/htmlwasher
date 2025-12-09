@@ -9,6 +9,11 @@ Read these first:
 2. `prompts/library-selection.md` — Library choices
 3. `prompts/library-selection-full.md` — Code patterns, C#→JS mapping
 
+## Agent
+
+Use this coding style:
+- `.claude/agents/ts-coder.md` — TypeScript coding principles (inevitable code, simplicity over abstraction)
+
 ## Skills
 
 Use these skills (in `.claude/skills/`):
