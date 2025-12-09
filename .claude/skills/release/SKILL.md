@@ -1,9 +1,9 @@
 ---
-name: npm-release
-description: Release workflow for npm packages. Use when publishing a new version, bumping versions (patch/minor/major), generating changelogs, creating git tags, GitHub releases, or running npm publish with provenance.
+name: release
+description: Release workflow for npm packages. Use when publishing a new version, bumping versions (patch/minor/major), generating changelogs, creating git tags, GitHub releases, or publishing to npm with provenance.
 ---
 
-# npm Release
+# Release
 
 Workflow for releasing npm packages with proper versioning, changelog, and provenance.
 
