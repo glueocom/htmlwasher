@@ -11,8 +11,7 @@ Read these first:
 
 ## Agent
 
-Use this coding style:
-- `.claude/agents/ts-coder.md` — TypeScript coding principles (inevitable code, simplicity over abstraction)
+Use this agent: @agent-ts-coder
 
 ## Skills
 
