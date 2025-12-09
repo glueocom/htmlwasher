@@ -8,13 +8,14 @@ Read these first:
 1. `.claude/prompts/prd.md` — Requirements, API design, pipeline
 2. `.claude/prompts/library-selection.md` — Library choices
 3. `.claude/prompts/library-selection-full.md` — Code patterns, C#→JS mapping
+4. `.claude/agents/ts-coder.md` — TypeScript coding principles
 
 ## Stack
 
 - TypeScript (strict)
 - pnpm
 - Biome (lint/format)
-- Vitest (tests)
+- Jest (tests)
 
 ## Implementation Order
 
