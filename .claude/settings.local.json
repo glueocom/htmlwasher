@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Write(//Users/miroslavsekera/r/**)",
+      "Edit(/Users/miroslavsekera/r/**)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
