@@ -44,7 +44,7 @@ pnpm build
 
 ```bash
 # Bump version (updates package.json)
-npm version patch --no-git-tag-version
+pnpm version patch --no-git-tag-version
 # or: minor, major, prepatch, preminor, premajor, prerelease
 ```
 
@@ -60,7 +60,7 @@ Or manually add entry to CHANGELOG.md.
 ### 4. Commit and Tag
 
 ```bash
-git add package.json CHANGELOG.md
+git add package.json pnpm-lock.yaml CHANGELOG.md
 git commit -m "chore: release v1.0.1"
 git tag -a "v1.0.1" -m "Release v1.0.1"
 ```
@@ -75,10 +75,10 @@ git push --tags
 ### 6. Publish to npm
 
 ```bash
-npm publish --provenance --access public
+pnpm publish --provenance --access public
 ```
 
-The `--provenance` flag adds supply chain security attestations (requires npm 9.5+).
+The `--provenance` flag adds supply chain security attestations.
 
 ### 7. GitHub Release (optional)
 
@@ -95,15 +95,15 @@ gh release create "v1.0.1" --title "v1.0.1" --generate-notes
 ## Pre-release Versions
 
 ```bash
-npm version prerelease --preid=beta   # 1.0.0 -> 1.0.1-beta.0
-npm version prerelease                 # 1.0.1-beta.0 -> 1.0.1-beta.1
-npm publish --tag beta                 # Publish as beta
+pnpm version prerelease --preid=beta   # 1.0.0 -> 1.0.1-beta.0
+pnpm version prerelease                 # 1.0.1-beta.0 -> 1.0.1-beta.1
+pnpm publish --tag beta                 # Publish as beta
 ```
 
 ## Troubleshooting
 
-**"npm ERR! 403 Forbidden"**: Check npm login (`npm whoami`) and package name availability.
+**"403 Forbidden"**: Check npm login (`pnpm whoami`) and package name availability.
 
-**"npm ERR! ENEEDAUTH"**: Run `npm login` first.
+**"ENEEDAUTH"**: Run `pnpm login` first.
 
 **Provenance fails**: Ensure running in GitHub Actions or supported CI with OIDC.

@@ -39,7 +39,7 @@ pnpm build
 
 # 7. Bump version
 echo "Bumping version ($VERSION_TYPE)..."
-NEW_VERSION=$(npm version $VERSION_TYPE --no-git-tag-version)
+NEW_VERSION=$(pnpm version $VERSION_TYPE --no-git-tag-version)
 echo "New version: $NEW_VERSION"
 
 # 8. Generate changelog entry (if git-cliff is available)
@@ -50,7 +50,7 @@ fi
 
 # 9. Commit version bump
 echo "Committing version bump..."
-git add package.json CHANGELOG.md 2>/dev/null || git add package.json
+git add package.json pnpm-lock.yaml CHANGELOG.md 2>/dev/null || git add package.json pnpm-lock.yaml 2>/dev/null || git add package.json
 git commit -m "chore: release $NEW_VERSION"
 
 # 10. Create git tag
@@ -64,7 +64,7 @@ git push --tags
 
 # 12. Publish to npm
 echo "Publishing to npm..."
-npm publish --provenance --access public
+pnpm publish --provenance --access public
 
 # 13. Create GitHub release (if gh CLI is available)
 if command -v gh &> /dev/null; then
