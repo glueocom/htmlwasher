@@ -9,15 +9,13 @@ Workflow for releasing npm packages with proper versioning, changelog, and prove
 
 ## Quick Release
 
-Run the release script:
-
 ```bash
-./scripts/release.sh patch   # 1.0.0 -> 1.0.1
-./scripts/release.sh minor   # 1.0.0 -> 1.1.0
-./scripts/release.sh major   # 1.0.0 -> 2.0.0
+./scripts/release.sh patch   # 1.0.0 → 1.0.1
+./scripts/release.sh minor   # 1.0.0 → 1.1.0
+./scripts/release.sh major   # 1.0.0 → 2.0.0
 ```
 
-The script handles: clean check, tests, build, version bump, changelog, commit, tag, push, npm publish, and GitHub release.
+The script performs: clean check → tests → build → version bump → changelog → commit → tag → push → npm publish.
 
 ## Manual Steps
 
@@ -25,85 +23,106 @@ The script handles: clean check, tests, build, version bump, changelog, commit, 
 
 ```bash
 # Ensure clean working directory
-git status
+git status --porcelain  # Should be empty
 
 # Ensure on main branch
-git branch --show-current
+git branch --show-current  # Should be main
 
 # Pull latest
-git pull
+git pull origin main
 
-# Run tests
+# Run tests and build
 pnpm test
-
-# Run build
 pnpm build
 ```
 
 ### 2. Version Bump
 
 ```bash
-# Bump version (updates package.json)
+# Bump version (updates package.json, no git tag yet)
 pnpm version patch --no-git-tag-version
-# or: minor, major, prepatch, preminor, premajor, prerelease
+# Options: patch | minor | major | prepatch | preminor | premajor | prerelease
 ```
 
-### 3. Changelog (optional)
+### 3. Changelog
 
-Using git-cliff:
+Add entry to CHANGELOG.md:
+
+```markdown
+## [1.0.1] - 2025-01-15
+
+### Fixed
+- Fixed XSS vector in attribute sanitization
+```
+
+Or use git-cliff if installed:
 ```bash
 git-cliff --unreleased --prepend CHANGELOG.md
 ```
 
-Or manually add entry to CHANGELOG.md.
-
 ### 4. Commit and Tag
 
 ```bash
+VERSION=$(node -p "require('./package.json').version")
 git add package.json pnpm-lock.yaml CHANGELOG.md
-git commit -m "chore: release v1.0.1"
-git tag -a "v1.0.1" -m "Release v1.0.1"
+git commit -m "chore: release v$VERSION"
+git tag -a "v$VERSION" -m "Release v$VERSION"
 ```
 
 ### 5. Push
 
 ```bash
-git push
-git push --tags
+git push origin main
+git push origin --tags
 ```
 
 ### 6. Publish to npm
 
 ```bash
+# Local publish (no provenance)
+pnpm publish --access public
+
+# CI publish with provenance (GitHub Actions, GitLab CI)
 pnpm publish --provenance --access public
 ```
 
-The `--provenance` flag adds supply chain security attestations.
+> **Note:** `--provenance` requires OIDC-enabled CI (GitHub Actions, GitLab CI). It won't work locally.
 
-### 7. GitHub Release (optional)
+### 7. GitHub Release
 
 ```bash
-gh release create "v1.0.1" --title "v1.0.1" --generate-notes
+gh release create "v$VERSION" --title "v$VERSION" --generate-notes
 ```
 
 ## Versioning Guidelines
 
-- **patch**: Bug fixes, documentation updates
-- **minor**: New features (backward compatible)
-- **major**: Breaking changes
+| Type | When to Use | Example |
+|------|-------------|---------|
+| `patch` | Bug fixes, docs, internal changes | 1.0.0 → 1.0.1 |
+| `minor` | New features, backward compatible | 1.0.0 → 1.1.0 |
+| `major` | Breaking changes | 1.0.0 → 2.0.0 |
 
 ## Pre-release Versions
 
 ```bash
-pnpm version prerelease --preid=beta   # 1.0.0 -> 1.0.1-beta.0
-pnpm version prerelease                 # 1.0.1-beta.0 -> 1.0.1-beta.1
-pnpm publish --tag beta                 # Publish as beta
+# Create beta
+pnpm version prerelease --preid=beta   # 1.0.0 → 1.0.1-beta.0
+pnpm publish --tag beta --access public
+
+# Increment beta
+pnpm version prerelease                 # 1.0.1-beta.0 → 1.0.1-beta.1
+
+# Promote to stable
+pnpm version patch                      # 1.0.1-beta.1 → 1.0.1
+pnpm publish --access public
 ```
 
 ## Troubleshooting
 
-**"403 Forbidden"**: Check npm login (`pnpm whoami`) and package name availability.
-
-**"ENEEDAUTH"**: Run `pnpm login` first.
-
-**Provenance fails**: Ensure running in GitHub Actions or supported CI with OIDC.
+| Error | Cause | Fix |
+|-------|-------|-----|
+| 403 Forbidden | Not logged in or no permission | `pnpm login` |
+| ENEEDAUTH | Not authenticated | `pnpm login` |
+| Package name taken | Name conflict on npm | Change name in package.json |
+| Provenance fails | Not in CI with OIDC | Remove `--provenance` for local publish |
+| Tag exists | Already released this version | Bump version again |
