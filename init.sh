@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🚀 Initializing htmlwasher-lib package..."
+echo "🚀 Initializing htmlwasher package..."
 
 # Initialize pnpm package
 pnpm init

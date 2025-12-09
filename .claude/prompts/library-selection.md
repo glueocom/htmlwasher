@@ -1,4 +1,4 @@
-# Library Selection: htmlwasher-lib
+# Library Selection: htmlwasher
 
 ## Summary
 
@@ -39,7 +39,7 @@ Replace .NET HTML processing stack (HtmlAgilityPack + HTML Tidy) with pure JavaS
 Single npm package with **conditional exports**:
 
 ```
-htmlwasher-lib/
+htmlwasher/
 ├── src/
 │   ├── index.ts          # Main entry, shared logic
 │   ├── browser.ts        # Browser-specific (native DOM)

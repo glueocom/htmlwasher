@@ -1,6 +1,6 @@
-# Implement htmlwasher-lib
+# Implement htmlwasher
 
-Create the `htmlwasher-lib` npm package in this directory.
+Create the `htmlwasher` npm package in this directory.
 
 ## Reference Docs
 

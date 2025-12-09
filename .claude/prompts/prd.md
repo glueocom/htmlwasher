@@ -1,8 +1,8 @@
-# Product Requirements Document: htmlwasher-lib
+# Product Requirements Document: htmlwasher
 
 ## Overview
 
-**Product Name:** htmlwasher-lib  
+**Product Name:** htmlwasher  
 **Type:** npm package (TypeScript)  
 **Distribution:** Internal use  
 **Target Environments:** Browser & Node.js (isomorphic)
@@ -160,7 +160,7 @@ interface WashResult {
 ### Usage Examples
 
 ```typescript
-import { wash } from 'htmlwasher-lib';
+import { wash } from 'htmlwasher';
 
 // Basic usage (standard preset)
 const result = wash(dirtyHtml);
@@ -218,7 +218,7 @@ const custom = wash(dirtyHtml, {
 ### Package Structure
 
 ```
-htmlwasher-lib/
+htmlwasher/
 ├── src/
 │   ├── index.ts           # Main entry, types, exports
 │   ├── wash.ts            # Core washing logic

@@ -1,4 +1,4 @@
-# Library Selection (Full): htmlwasher-lib
+# Library Selection (Full): htmlwasher
 
 ## Overview
 
@@ -19,7 +19,7 @@ This document provides complete implementation guidance for replacing the .NET H
 
 ```json
 {
-  "name": "htmlwasher-lib",
+  "name": "htmlwasher",
   "type": "module",
   "exports": {
     ".": {
