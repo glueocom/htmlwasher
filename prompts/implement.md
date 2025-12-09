@@ -25,7 +25,7 @@ Use these skills (in `.claude/skills/`):
 - TypeScript (strict)
 - pnpm
 - Biome (lint/format)
-- Vitest (tests)
+- Jest (tests)
 
 ## Implementation Order
 
