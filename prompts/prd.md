@@ -15,7 +15,7 @@ The current htmlwasher.com relies on .NET backend (HtmlAgilityPack + HTML Tidy).
 
 ## Solution
 
-A pure JavaScript/TypeScript library using **sanitize-html** with YAML-based configuration.
+A pure JavaScript/TypeScript library using **sanitize-html** with YAML-based configuration, validated against a JSON Schema generated from sanitize-html types.
 
 ---
 
@@ -57,18 +57,14 @@ type ParseSetupResult =
 
 type ErrorCode =
   | 'YAML_SYNTAX_ERROR'
-  | 'INVALID_ALLOWED_TAGS'
-  | 'INVALID_ALLOWED_ATTRIBUTES'
-  | 'INVALID_TRANSFORM_TAGS'
-  | 'INVALID_DISALLOWED_MODE'
-  | 'UNKNOWN_OPTION'
+  | 'SCHEMA_VALIDATION_ERROR'
 ```
 
 ---
 
 ## YAML Configuration Format
 
-Maps directly to sanitize-html options:
+Maps directly to sanitize-html options (safe subset only):
 
 ```yaml
 # Allowed tags (whitelist)
@@ -95,17 +91,48 @@ allowedAttributes:
     - colspan
     - rowspan
 
-# Tag replacements
-transformTags:
-  b: strong
-  i: em
-  div: p
+# Allowed classes per tag
+allowedClasses:
+  p:
+    - intro
+    - highlight
 
 # Disallowed tag handling
 # 'discard' = remove tag, keep content (default)
 # 'escape' = convert to HTML entities
+# 'recursiveEscape' = escape tag and all children
 disallowedTagsMode: discard
+
+# Self-closing tags
+selfClosing:
+  - img
+  - br
+  - hr
+
+# Allow protocol-relative URLs
+allowProtocolRelative: false
 ```
+
+### Safe Subset (Exposed Options)
+
+Only these sanitize-html options are exposed via YAML:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `allowedTags` | string[] | Tags to allow |
+| `allowedAttributes` | Record<string, string[]> | Attributes per tag |
+| `allowedClasses` | Record<string, string[]> | Classes per tag |
+| `disallowedTagsMode` | enum | How to handle disallowed tags |
+| `selfClosing` | string[] | Self-closing tags |
+| `allowProtocolRelative` | boolean | Allow // URLs |
+
+**Not exposed** (security/complexity):
+- `transformTags` (function)
+- `exclusiveFilter` (function)
+- `textFilter` (function)
+- `parser` (complex object)
+- `allowedIframeHostnames` (security risk)
+- `allowedScriptHostnames` (security risk)
 
 ---
 
@@ -144,8 +171,6 @@ allowedTags:
 allowedAttributes:
   a:
     - href
-transformTags:
-  b: strong
 `
 
 const result = wash(html, { setup, title: 'My Document' })
@@ -168,16 +193,37 @@ const washed = wash(html, { setup: userYaml })
 
 ---
 
-## Error Codes
+## Validation Architecture
 
-| Code | Cause |
-|------|-------|
-| `YAML_SYNTAX_ERROR` | Invalid YAML syntax |
-| `INVALID_ALLOWED_TAGS` | allowedTags must be string[] |
-| `INVALID_ALLOWED_ATTRIBUTES` | allowedAttributes must be Record<string, string[]> |
-| `INVALID_TRANSFORM_TAGS` | transformTags must be Record<string, string> |
-| `INVALID_DISALLOWED_MODE` | Must be 'discard', 'escape', or 'recursiveEscape' |
-| `UNKNOWN_OPTION` | Unrecognized configuration key |
+### JSON Schema Generation (Build Time)
+
+1. Create wrapper type in `src/schema/sanitize-config.ts`:
+   ```typescript
+   import type { IOptions } from 'sanitize-html'
+   
+   /** Safe subset of sanitize-html options for YAML config */
+   export type SanitizeConfigSchema = Pick<IOptions,
+     | 'allowedTags'
+     | 'allowedAttributes'
+     | 'allowedClasses'
+     | 'disallowedTagsMode'
+     | 'selfClosing'
+     | 'allowProtocolRelative'
+   >
+   ```
+
+2. Generate JSON Schema via pnpm script:
+   ```bash
+   pnpm run schema:generate
+   ```
+
+3. Output: `dist/schema.json`
+
+### Runtime Validation (Ajv)
+
+1. Parse YAML → JavaScript object (`yaml` library)
+2. Validate against JSON Schema (`ajv` library)
+3. Return typed config or structured error
 
 ---
 
@@ -188,23 +234,27 @@ Input: HTML + WashOptions
          │
          ▼
 ┌─────────────────────────┐
-│ 1. Parse YAML (yaml)    │
-│    Validate (Zod)       │
+│ 1. Parse YAML           │  ← yaml (eemeli)
 └─────────────────────────┘
          │
          ▼
 ┌─────────────────────────┐
-│ 2. Merge with defaults  │  ← Always block: script, style, iframe
+│ 2. Validate JSON Schema │  ← Ajv
 └─────────────────────────┘
          │
          ▼
 ┌─────────────────────────┐
-│ 3. sanitize-html        │  ← Main sanitization
+│ 3. Merge with defaults  │  ← Always block: script, style, iframe
 └─────────────────────────┘
          │
          ▼
 ┌─────────────────────────┐
-│ 4. Post-process         │  ← Title, img alt
+│ 4. sanitize-html        │  ← Main sanitization
+└─────────────────────────┘
+         │
+         ▼
+┌─────────────────────────┐
+│ 5. Post-process         │  ← Title, img alt
 └─────────────────────────┘
          │
          ▼
@@ -233,6 +283,7 @@ Output: WashResult { html, warnings }
 | TypeScript | Strict mode, no `any` |
 | Performance | < 50ms typical documents |
 | Test coverage | > 90% |
+| Schema output | `dist/schema.json` (bundled + exportable) |
 
 ---
 
@@ -242,4 +293,4 @@ Output: WashResult { html, warnings }
 - Word/PDF conversion
 - Pretty-printing
 - Streaming API
-- Custom sanitize-html hooks
+- Custom sanitize-html hooks (transformTags, etc.)
