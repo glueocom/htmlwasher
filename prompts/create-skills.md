@@ -1,4 +1,4 @@
-# Create Skills for htmlwasher
+# Create Skills for htmlsanitization-server
 
 Use the skill-creator at `.claude/skills/skill-creator` to generate the following skills in `.claude/skills/`.
 

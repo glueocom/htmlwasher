@@ -1,1 +1,1 @@
-# htmlwasher
+# htmlsanitization-server

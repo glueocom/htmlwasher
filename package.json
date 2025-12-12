@@ -1,5 +1,5 @@
 {
-	"name": "htmlwasher",
+	"name": "htmlsanitization-server",
 	"version": "1.0.0",
 	"description": "",
 	"main": "./src/index.ts",

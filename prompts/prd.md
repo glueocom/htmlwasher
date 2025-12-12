@@ -1,17 +1,17 @@
-# Product Requirements Document: htmlwasher
+# Product Requirements Document: htmlsanitization-server
 
 ## Overview
 
 | Field | Value |
 |-------|-------|
-| Product | htmlwasher |
+| Product | htmlsanitization-server |
 | Type | npm package (TypeScript) |
 | Distribution | Public npm |
 | Target | **Node.js only** |
 
 ## Problem Statement
 
-The current htmlwasher.com relies on .NET backend (HtmlAgilityPack + HTML Tidy). This creates server costs, latency, and maintenance burden.
+The current htmlsanitization-server.com relies on .NET backend (HtmlAgilityPack + HTML Tidy). This creates server costs, latency, and maintenance burden.
 
 ## Solution
 
@@ -139,10 +139,10 @@ Only these sanitize-html options are exposed via YAML:
 ## Built-in Presets
 
 ```typescript
-import { presets } from 'htmlwasher'
+import { presets } from 'htmlsanitization-server'
 
 // presets.minimal  - p, a, strong, em, br
-// presets.standard - current htmlwasher.com config
+// presets.standard - current htmlsanitization-server.com config
 // presets.permissive - extended with div, span, code, pre, blockquote
 ```
 
@@ -153,7 +153,7 @@ import { presets } from 'htmlwasher'
 ### Basic
 
 ```typescript
-import { wash } from 'htmlwasher'
+import { wash } from 'htmlsanitization-server'
 
 const result = wash('<div><script>alert(1)</script><p>Hello</p></div>')
 // result.html = '<p>Hello</p>'
@@ -162,7 +162,7 @@ const result = wash('<div><script>alert(1)</script><p>Hello</p></div>')
 ### With YAML setup
 
 ```typescript
-import { wash } from 'htmlwasher'
+import { wash } from 'htmlsanitization-server'
 
 const setup = `
 allowedTags:
@@ -179,7 +179,7 @@ const result = wash(html, { setup, title: 'My Document' })
 ### Validate before use
 
 ```typescript
-import { parseSetup, wash } from 'htmlwasher'
+import { parseSetup, wash } from 'htmlsanitization-server'
 
 const result = parseSetup(userYaml)
 

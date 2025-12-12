@@ -1,6 +1,6 @@
-# Implement htmlwasher
+# Implement htmlsanitization-server
 
-Create the `htmlwasher` npm package in this directory.
+Create the `htmlsanitization-server` npm package in this directory.
 
 ## Reference
 
@@ -43,7 +43,7 @@ Create the `htmlwasher` npm package in this directory.
 ## Project Structure
 
 ```
-htmlwasher/
+htmlsanitization-server/
 ├── src/
 │   ├── index.ts              # Public exports
 │   ├── wash.ts               # wash() implementation
@@ -87,7 +87,7 @@ pnpm add -D typescript vitest @biomejs/biome ts-json-schema-generator @types/san
 
 ```json
 {
-  "name": "htmlwasher",
+  "name": "htmlsanitization-server",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

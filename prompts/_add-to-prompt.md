@@ -11,14 +11,14 @@ There will be two steps, two methods
 2. `parseSetup` will be used to validate and parse the YAML setup. In case of error, it will return an error object with errorCode and errorMessage.
 
 
-for YAML and YAML validation, use thos libs in the report: /Users/miroslavsekera/r/htmlwasher/prompts/YALM-lib-research.md
+for YAML and YAML validation, use thos libs in the report: /Users/miroslavsekera/r/htmlsanitization-server/prompts/YALM-lib-research.md
 
 
 
-also, there wont be the `/Users/miroslavsekera/r/htmlwasher/prompts/library-selection-full.md
-and `/Users/miroslavsekera/r/htmlwasher/prompts/library-selection.md`
+also, there wont be the `/Users/miroslavsekera/r/htmlsanitization-server/prompts/library-selection-full.md
+and `/Users/miroslavsekera/r/htmlsanitization-server/prompts/library-selection.md`
 
-specify libs in the `/Users/miroslavsekera/r/htmlwasher/prompts/implement.md`
+specify libs in the `/Users/miroslavsekera/r/htmlsanitization-server/prompts/implement.md`
 
  only the simp
 
