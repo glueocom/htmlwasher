@@ -5,6 +5,7 @@ node_modules/
 dist/
 package-out/
 *.tgz
+schema.json
 
 # IDE
 .idea/

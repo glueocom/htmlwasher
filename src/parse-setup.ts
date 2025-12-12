@@ -1,6 +1,6 @@
 import Ajv from "ajv";
 import YAML from "yaml";
-import schema from "../dist/schema.json" with { type: "json" };
+import schema from "../schema.json" with { type: "json" };
 import type { SanitizeConfigSchema } from "./schema/sanitize-config.ts";
 
 const ajv = new Ajv({ allErrors: true });

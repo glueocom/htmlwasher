@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "./src/index.ts",
 	"scripts": {
-		"schema:generate": "mkdir -p dist && ts-json-schema-generator --path src/schema/sanitize-config.ts --type SanitizeConfigSchema --no-top-ref -o dist/schema.json",
+		"schema:generate": "ts-json-schema-generator --path src/schema/sanitize-config.ts --type SanitizeConfigSchema --no-top-ref -o schema.json",
 		"build": "pnpm run schema:generate",
 		"test": "pnpm run schema:generate && jest",
 		"test:watch": "jest --watch",
@@ -12,7 +12,7 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
-		"pack:folder": "bash -c 'pnpm run schema:generate && cp dist/schema.json schema.json && rm -rf package-out && mkdir -p package-out && pnpm pack --pack-destination package-out && rm schema.json && cd package-out && tar -xzf *.tgz --strip-components=1 && rm -f *.tgz'",
+		"pack:folder": "bash -c 'pnpm run schema:generate && rm -rf package-out && mkdir -p package-out && pnpm pack --pack-destination package-out && cd package-out && tar -xzf *.tgz --strip-components=1 && rm -f *.tgz'",
 		"typecheck": "tsc --noEmit",
 		"prepublishOnly": "pnpm typecheck && pnpm test"
 	},

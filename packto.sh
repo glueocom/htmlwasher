@@ -12,8 +12,14 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-DEST="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Resolve destination to absolute path before changing directories
+if [[ "$1" = /* ]]; then
+    DEST="$1"
+else
+    DEST="$(pwd)/$1"
+fi
 
 echo "Installing dependencies..."
 cd "$SCRIPT_DIR"
