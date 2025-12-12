@@ -4,7 +4,7 @@ Read and execute:
 
 after it is built, run it and test ut usig the usnit tests.
 
-then, examine output and modify back the spec docs at 
+then, examine output, determine problems, determine what was missing or wrong in the spec docs, and modify back the spec docs at:
  `/Users/miroslavsekera/r/htmlsanitization-server/prompts/implement.md`
  or
  `/Users/miroslavsekera/r/htmlsanitization-server/prompts/prd.md`
