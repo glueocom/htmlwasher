@@ -2,6 +2,12 @@
 
 Create the `htmlsanitization-server` npm package in this directory.
 
+## Decisions
+
+- **TypeScript-only**: Publish source TypeScript files directly (no JS compilation). Internal use only.
+- **Schema output**: Generate `schema.json` to `dist/` folder (only generated artifact).
+- **Testing**: Use Jest (NOT Vitest).
+
 ## Reference
 
 - `prompts/prd.md` — Requirements, API, types
@@ -33,7 +39,9 @@ Create the `htmlsanitization-server` npm package in this directory.
 | Package | Purpose |
 |---------|---------|
 | `typescript` | Compiler |
-| `vitest` | Tests |
+| `jest` | Tests |
+| `ts-jest` | Jest TypeScript transformer |
+| `@types/jest` | Jest type definitions |
 | `biome` | Lint + format |
 | `ts-json-schema-generator` | Generate JSON Schema from TS types |
 | `@types/sanitize-html` | Type definitions |
@@ -60,15 +68,11 @@ htmlsanitization-server/
 │       ├── parse-setup.test.ts
 │       └── presets.test.ts
 ├── dist/
-│   ├── index.js
-│   ├── index.d.ts
-│   └── schema.json           # Generated JSON Schema
-├── scripts/
-│   └── generate-schema.ts    # Schema generation script
+│   └── schema.json           # Generated JSON Schema (only generated artifact)
 ├── package.json
 ├── tsconfig.json
 ├── biome.json
-└── vitest.config.ts
+└── jest.config.ts
 ```
 
 ---
@@ -80,7 +84,7 @@ htmlsanitization-server/
 ```bash
 pnpm init
 pnpm add sanitize-html yaml ajv
-pnpm add -D typescript vitest @biomejs/biome ts-json-schema-generator @types/sanitize-html
+pnpm add -D typescript jest ts-jest @types/jest @biomejs/biome ts-json-schema-generator @types/sanitize-html
 ```
 
 ### 2. package.json
@@ -89,20 +93,18 @@ pnpm add -D typescript vitest @biomejs/biome ts-json-schema-generator @types/san
 {
   "name": "htmlsanitization-server",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
+    ".": "./src/index.ts",
     "./schema.json": "./dist/schema.json"
   },
-  "files": ["dist"],
+  "files": ["src", "dist"],
   "scripts": {
-    "schema:generate": "tsx scripts/generate-schema.ts",
-    "build": "pnpm run schema:generate && tsc",
-    "test": "vitest run",
+    "schema:generate": "ts-json-schema-generator --path src/schema/sanitize-config.ts --type SanitizeConfigSchema --no-top-ref -o dist/schema.json",
+    "build": "pnpm run schema:generate",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
     "lint": "biome check src",
     "format": "biome format --write src"
   },
@@ -120,10 +122,7 @@ pnpm add -D typescript vitest @biomejs/biome ts-json-schema-generator @types/san
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "dist",
-    "rootDir": "src",
-    "declaration": true,
-    "declarationMap": true,
+    "noEmit": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "verbatimModuleSyntax": true,
@@ -156,45 +155,15 @@ export type SanitizeConfigSchema = Pick<IOptions,
 >
 ```
 
-### 5. Schema generation script (`scripts/generate-schema.ts`)
-
-```typescript
-import { createGenerator } from 'ts-json-schema-generator'
-import { writeFileSync, mkdirSync } from 'node:fs'
-import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
-const config = {
-  path: join(__dirname, '../src/schema/sanitize-config.ts'),
-  tsconfig: join(__dirname, '../tsconfig.json'),
-  type: 'SanitizeConfigSchema',
-  additionalProperties: false,
-}
-
-const schema = createGenerator(config).createSchema(config.type)
-
-// Ensure dist directory exists
-const distDir = join(__dirname, '../dist')
-mkdirSync(distDir, { recursive: true })
-
-// Write schema
-const outputPath = join(distDir, 'schema.json')
-writeFileSync(outputPath, JSON.stringify(schema, null, 2))
-
-console.log(`Schema generated: ${outputPath}`)
-```
-
-### 6. Parse setup with Ajv (`src/parse-setup.ts`)
+### 5. Parse setup with Ajv (`src/parse-setup.ts`)
 
 ```typescript
 import YAML from 'yaml'
 import Ajv from 'ajv'
-import type { SanitizeConfigSchema } from './schema/sanitize-config.js'
+import type { SanitizeConfigSchema } from './schema/sanitize-config.ts'
 
-// Import generated schema (will exist after build)
-import schema from '../dist/schema.json' assert { type: 'json' }
+// Import generated schema (run `pnpm build` first)
+import schema from '../dist/schema.json' with { type: 'json' }
 
 const ajv = new Ajv({ allErrors: true })
 const validate = ajv.compile<SanitizeConfigSchema>(schema)
@@ -233,13 +202,13 @@ export function parseSetup(yamlString: string): ParseSetupResult {
 }
 ```
 
-### 7. Main function (`src/wash.ts`)
+### 6. Main function (`src/wash.ts`)
 
 ```typescript
 import sanitizeHtml from 'sanitize-html'
-import { parseSetup } from './parse-setup.js'
-import { presets } from './presets/index.js'
-import type { SanitizeConfigSchema } from './schema/sanitize-config.js'
+import { parseSetup } from './parse-setup.ts'
+import { presets } from './presets/index.ts'
+import type { SanitizeConfigSchema } from './schema/sanitize-config.ts'
 
 const ALWAYS_BLOCKED = ['script', 'style', 'iframe', 'object', 'embed', 'applet', 'frame']
 
@@ -298,7 +267,7 @@ function ensureImageAlt(html: string): string {
 }
 ```
 
-### 8. Presets (`src/presets/`)
+### 7. Presets (`src/presets/`)
 
 ```typescript
 // src/presets/index.ts
@@ -315,7 +284,7 @@ export const presets = {
 }
 ```
 
-### 9. Tests
+### 8. Tests
 
 Follow patterns in `.claude/skills/testing-html-processing`:
 - YAML parsing tests
@@ -323,11 +292,11 @@ Follow patterns in `.claude/skills/testing-html-processing`:
 - Tag whitelisting tests
 - XSS prevention tests
 
-### 10. Build + verify
+### 9. Build + verify
 
 ```bash
-pnpm run schema:generate  # Generate JSON Schema first
-pnpm build                # Compile TypeScript
+pnpm build                # Generate JSON Schema
+pnpm typecheck            # Type check (no emit)
 pnpm test                 # Run tests
 ls dist/schema.json       # Verify schema exists
 ```
@@ -337,8 +306,10 @@ ls dist/schema.json       # Verify schema exists
 ## Key Constraints
 
 1. **Node.js only** — No browser support
-2. **Two public functions**: `wash()` and `parseSetup()`
-3. **YAML config** → JSON Schema validation (Ajv) → sanitize-html
-4. **Safe subset only** — No function options (transformTags, etc.)
-5. **Schema in dist/** — Bundled with package AND available for external use
-6. **Security** — Always block dangerous tags regardless of config
+2. **TypeScript-only** — Source .ts files published directly, no JS compilation
+3. **Internal use only** — Not published to public npm
+4. **Two public functions**: `wash()` and `parseSetup()`
+5. **YAML config** → JSON Schema validation (Ajv) → sanitize-html
+6. **Safe subset only** — No function options (transformTags, etc.)
+7. **Schema in dist/** — Generated JSON Schema for validation
+8. **Security** — Always block dangerous tags regardless of config

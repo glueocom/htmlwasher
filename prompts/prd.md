@@ -5,8 +5,8 @@
 | Field | Value |
 |-------|-------|
 | Product | htmlsanitization-server |
-| Type | npm package (TypeScript) |
-| Distribution | Public npm |
+| Type | npm package (TypeScript-only, no JS compilation) |
+| Distribution | Internal use only |
 | Target | **Node.js only** |
 
 ## Problem Statement
@@ -200,7 +200,7 @@ const washed = wash(html, { setup: userYaml })
 1. Create wrapper type in `src/schema/sanitize-config.ts`:
    ```typescript
    import type { IOptions } from 'sanitize-html'
-   
+
    /** Safe subset of sanitize-html options for YAML config */
    export type SanitizeConfigSchema = Pick<IOptions,
      | 'allowedTags'
@@ -212,9 +212,9 @@ const washed = wash(html, { setup: userYaml })
    >
    ```
 
-2. Generate JSON Schema via pnpm script:
+2. Generate JSON Schema via CLI in package.json:
    ```bash
-   pnpm run schema:generate
+   pnpm build  # runs ts-json-schema-generator CLI
    ```
 
 3. Output: `dist/schema.json`
@@ -280,10 +280,11 @@ Output: WashResult { html, warnings }
 | Requirement | Target |
 |-------------|--------|
 | Platform | Node.js only (server-side) |
-| TypeScript | Strict mode, no `any` |
+| TypeScript | Strict mode, no `any`, source published directly (no JS compilation) |
+| Distribution | Internal use only |
 | Performance | < 50ms typical documents |
 | Test coverage | > 90% |
-| Schema output | `dist/schema.json` (bundled + exportable) |
+| Schema output | `dist/schema.json` (generated for validation) |
 
 ---
 
