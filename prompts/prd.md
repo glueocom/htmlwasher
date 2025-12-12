@@ -217,7 +217,7 @@ const washed = wash(html, { setup: userYaml })
    pnpm build  # runs ts-json-schema-generator CLI
    ```
 
-3. Output: `dist/schema.json`
+3. Output: `schema.json` (at package root, generated during build/pack)
 
 ### Runtime Validation (Ajv)
 
@@ -284,7 +284,8 @@ Output: WashResult { html, warnings }
 | Distribution | Internal use only |
 | Performance | < 50ms typical documents |
 | Test coverage | > 90% |
-| Schema output | `dist/schema.json` (generated for validation) |
+| Schema output | Generated to `dist/schema.json` (gitignored), copied to package root during `pack:folder` |
+| Documentation | README.md with installation, usage examples, API reference, configuration options, security notes |
 
 ---
 

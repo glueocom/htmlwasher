@@ -5,7 +5,7 @@ Create the `htmlsanitization-server` npm package in this directory.
 ## Decisions
 
 - **TypeScript-only**: Publish source TypeScript files directly (no JS compilation). Internal use only.
-- **Schema output**: Generate `schema.json` to `dist/` folder (only generated artifact).
+- **Schema output**: Generate to `dist/schema.json` (gitignored), copied to package root during `pack:folder`.
 - **Testing**: Use Jest (NOT Vitest).
 
 ## Reference
@@ -61,8 +61,8 @@ htmlsanitization-server/
 │   │   └── sanitize-config.ts  # Wrapper type for schema generation
 │   └── presets/
 │       └── index.ts          # Export preset YAML strings (embedded, not separate files)
-├── dist/
-│   └── schema.json           # Generated JSON Schema (only generated artifact)
+├── dist/                     # Gitignored build output
+│   └── schema.json           # Generated JSON Schema
 ├── package.json
 ├── tsconfig.json
 ├── biome.json
@@ -93,11 +93,12 @@ pnpm add -D typescript jest ts-jest @types/jest @biomejs/biome ts-json-schema-ge
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./schema.json": "./dist/schema.json"
+    "./schema.json": "./schema.json"
   },
-  "files": ["src", "dist"],
+  "files": ["src/**/*.ts", "!src/**/*.test.ts", "schema.json"],
   "scripts": {
-    "schema:generate": "ts-json-schema-generator --path src/schema/sanitize-config.ts --type SanitizeConfigSchema --no-top-ref -o dist/schema.json",
+    "schema:generate": "mkdir -p dist && ts-json-schema-generator ... -o dist/schema.json",
+    "pack:folder": "pnpm run schema:generate && cp dist/schema.json schema.json && pnpm pack ... && rm schema.json",
     "build": "pnpm run schema:generate",
     "test": "jest",
     "typecheck": "tsc --noEmit",
@@ -322,8 +323,9 @@ Follow patterns in `.claude/skills/testing-html-processing`:
 ```bash
 pnpm build                # Generate JSON Schema
 pnpm typecheck            # Type check (no emit)
-pnpm test                 # Run tests
-ls dist/schema.json       # Verify schema exists
+pnpm test                 # Run tests (auto-generates schema)
+pnpm pack:folder          # Creates package-out/ with schema.json included
+ls package-out/schema.json  # Verify schema in package output
 ```
 
 ---
@@ -336,7 +338,7 @@ ls dist/schema.json       # Verify schema exists
 4. **Two public functions**: `wash()` and `parseSetup()`
 5. **YAML config** → JSON Schema validation (Ajv) → sanitize-html
 6. **Safe subset only** — No function options (transformTags, etc.)
-7. **Schema in dist/** — Generated JSON Schema for validation
+7. **Schema in dist/** — Generated to `dist/schema.json` (gitignored), copied to package root during `pack:folder`
 8. **Security** — Always block dangerous tags AND event handlers regardless of config
 
 ## Lessons Learned
