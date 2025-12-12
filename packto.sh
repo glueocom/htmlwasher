@@ -15,8 +15,11 @@ fi
 DEST="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "Building package..."
+echo "Installing dependencies..."
 cd "$SCRIPT_DIR"
+pnpm install
+
+echo "Building package..."
 pnpm run pack:folder
 
 echo "Copying to $DEST..."
