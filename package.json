@@ -12,7 +12,7 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
-		"pack:folder": "zsh -c 'pnpm run schema:generate && cp dist/schema.json schema.json && rm -rf package-out && mkdir -p package-out && pnpm pack --pack-destination package-out && rm schema.json && cd package-out && tar -xzf *.tgz --strip-components=1 && rm -f *.tgz'",
+		"pack:folder": "bash -c 'pnpm run schema:generate && cp dist/schema.json schema.json && rm -rf package-out && mkdir -p package-out && pnpm pack --pack-destination package-out && rm schema.json && cd package-out && tar -xzf *.tgz --strip-components=1 && rm -f *.tgz'",
 		"typecheck": "tsc --noEmit",
 		"prepublishOnly": "pnpm typecheck && pnpm test"
 	},
