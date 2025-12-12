@@ -54,19 +54,13 @@ Create the `htmlsanitization-server` npm package in this directory.
 htmlsanitization-server/
 ├── src/
 │   ├── index.ts              # Public exports
+│   ├── index.test.ts         # All tests (co-located)
 │   ├── wash.ts               # wash() implementation
 │   ├── parse-setup.ts        # parseSetup() with Ajv validation
 │   ├── schema/
 │   │   └── sanitize-config.ts  # Wrapper type for schema generation
-│   ├── presets/
-│   │   ├── index.ts          # Export preset YAML strings
-│   │   ├── minimal.yaml
-│   │   ├── standard.yaml
-│   │   └── permissive.yaml
-│   └── __tests__/
-│       ├── wash.test.ts
-│       ├── parse-setup.test.ts
-│       └── presets.test.ts
+│   └── presets/
+│       └── index.ts          # Export preset YAML strings (embedded, not separate files)
 ├── dist/
 │   └── schema.json           # Generated JSON Schema (only generated artifact)
 ├── package.json
@@ -74,6 +68,8 @@ htmlsanitization-server/
 ├── biome.json
 └── jest.config.ts
 ```
+
+**Note**: Presets are embedded as string literals in `presets/index.ts` rather than separate YAML files. This avoids ESM/CJS compatibility issues with Jest (import.meta.url vs __dirname conflict when SWC transforms to CJS).
 
 ---
 
@@ -136,23 +132,23 @@ pnpm add -D typescript jest ts-jest @types/jest @biomejs/biome ts-json-schema-ge
 
 ### 4. Schema wrapper type (`src/schema/sanitize-config.ts`)
 
-```typescript
-import type { IOptions } from 'sanitize-html'
+**Important**: Do NOT use `Pick<IOptions, ...>` because `IOptions` has complex types (RegExp, functions) that aren't JSON-serializable and cause schema generation to fail. Create a dedicated interface with simplified types:
 
+```typescript
 /**
  * Safe subset of sanitize-html options for YAML configuration.
- * Only JSON-serializable options are exposed.
- * 
+ * Only JSON-serializable options are exposed (no functions, RegExp, etc.)
+ *
  * @additionalProperties false
  */
-export type SanitizeConfigSchema = Pick<IOptions,
-  | 'allowedTags'
-  | 'allowedAttributes'
-  | 'allowedClasses'
-  | 'disallowedTagsMode'
-  | 'selfClosing'
-  | 'allowProtocolRelative'
->
+export interface SanitizeConfigSchema {
+  allowedTags?: string[];
+  allowedAttributes?: Record<string, string[]>;  // Simplified from IOptions
+  allowedClasses?: Record<string, string[]>;     // Simplified from IOptions
+  disallowedTagsMode?: "discard" | "escape" | "recursiveEscape" | "completelyDiscard";
+  selfClosing?: string[];
+  allowProtocolRelative?: boolean;
+}
 ```
 
 ### 5. Parse setup with Ajv (`src/parse-setup.ts`)
@@ -204,13 +200,18 @@ export function parseSetup(yamlString: string): ParseSetupResult {
 
 ### 6. Main function (`src/wash.ts`)
 
+**Important implementation details**:
+1. Do NOT spread config directly (`...config`) - sanitize-html crashes on undefined values
+2. Filter event handlers from allowedAttributes even if config tries to allow them
+3. Only pass defined properties to sanitize-html
+
 ```typescript
 import sanitizeHtml from 'sanitize-html'
 import { parseSetup } from './parse-setup.ts'
 import { presets } from './presets/index.ts'
 import type { SanitizeConfigSchema } from './schema/sanitize-config.ts'
 
-const ALWAYS_BLOCKED = ['script', 'style', 'iframe', 'object', 'embed', 'applet', 'frame']
+const ALWAYS_BLOCKED = ['script', 'style', 'iframe', 'object', 'embed', 'applet', 'frame', 'frameset']
 
 export interface WashOptions {
   setup?: string
@@ -232,56 +233,80 @@ export function wash(html: string, options?: WashOptions): WashResult {
   let config: SanitizeConfigSchema
   if (!parsed.ok) {
     warnings.push(`Setup error: ${parsed.errorMessage}`)
-    // Fall back to standard preset
     const fallback = parseSetup(presets.standard)
     config = fallback.ok ? fallback.config : {}
   } else {
     config = parsed.config
   }
 
-  // 2. Build sanitize-html options with security overrides
+  // 2. Build sanitize-html options - only include DEFINED properties
   const sanitizeOptions: sanitizeHtml.IOptions = {
-    ...config,
-    // Always block dangerous tags
     exclusiveFilter: (frame) => ALWAYS_BLOCKED.includes(frame.tag),
   }
+
+  if (config.allowedTags !== undefined) {
+    sanitizeOptions.allowedTags = config.allowedTags
+  }
+  if (config.allowedAttributes !== undefined) {
+    // SECURITY: Filter out event handlers (on*) even if config allows them
+    sanitizeOptions.allowedAttributes = filterEventHandlers(config.allowedAttributes)
+  }
+  // ... other properties similarly
 
   // 3. Sanitize
   let result = sanitizeHtml(html, sanitizeOptions)
 
-  // 4. Post-process
-  result = ensureTitle(result, options?.title)
-  result = ensureImageAlt(result)
-
+  // 4. Post-process (title, image alt)
   return { html: result, warnings }
 }
 
-function ensureTitle(html: string, title?: string): string {
-  // Implementation: add <title> if missing
-  return html
-}
-
-function ensureImageAlt(html: string): string {
-  // Implementation: add empty alt to images without alt
-  return html
+// Filter out event handler attributes for security
+function filterEventHandlers(attrs: Record<string, string[]>): Record<string, string[]> {
+  const result: Record<string, string[]> = {}
+  for (const [tag, attrList] of Object.entries(attrs)) {
+    result[tag] = attrList.filter((attr) => !attr.toLowerCase().startsWith("on"))
+  }
+  return result
 }
 ```
 
-### 7. Presets (`src/presets/`)
+### 7. Presets (`src/presets/index.ts`)
+
+**Important**: Do NOT use `readFileSync` with `import.meta.url` - this causes ESM/CJS conflicts when Jest/SWC transforms the code. Embed presets as string literals instead:
 
 ```typescript
-// src/presets/index.ts
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
 export const presets = {
-  minimal: readFileSync(join(__dirname, 'minimal.yaml'), 'utf-8'),
-  standard: readFileSync(join(__dirname, 'standard.yaml'), 'utf-8'),
-  permissive: readFileSync(join(__dirname, 'permissive.yaml'), 'utf-8'),
-}
+  minimal: `# Minimal preset
+allowedTags:
+  - p
+  - a
+  - strong
+  - em
+  - br
+allowedAttributes:
+  a:
+    - href
+disallowedTagsMode: discard
+allowProtocolRelative: false
+`,
+  standard: `# Standard preset
+allowedTags:
+  - p
+  - a
+  - strong
+  # ... more tags
+allowedAttributes:
+  a:
+    - href
+    - title
+  # ... more attributes
+`,
+  permissive: `# Permissive preset
+# ... extended configuration
+`,
+} as const
+
+export type PresetName = keyof typeof presets
 ```
 
 ### 8. Tests
@@ -312,4 +337,13 @@ ls dist/schema.json       # Verify schema exists
 5. **YAML config** → JSON Schema validation (Ajv) → sanitize-html
 6. **Safe subset only** — No function options (transformTags, etc.)
 7. **Schema in dist/** — Generated JSON Schema for validation
-8. **Security** — Always block dangerous tags regardless of config
+8. **Security** — Always block dangerous tags AND event handlers regardless of config
+
+## Lessons Learned
+
+- **Schema type**: Use dedicated interface, not `Pick<IOptions>` (complex types break schema generation)
+- **Presets**: Embed as string literals, not file reads (ESM/CJS Jest conflicts)
+- **Config passing**: Check for undefined before passing to sanitize-html (crashes otherwise)
+- **Event handlers**: Must explicitly filter `on*` attributes from allowedAttributes
+- **Jest transformer**: Project uses `@swc/jest`, works fine (spec mentioned ts-jest)
+- **Test location**: Co-located `*.test.ts` files, not separate `__tests__/` directory
